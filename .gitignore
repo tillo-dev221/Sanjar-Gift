@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+.env
+gift_bot.db
+*.db
+*.log
+.vscode/
+.idea/
