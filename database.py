@@ -450,3 +450,79 @@ async def get_user_referals_today(user_id):
         """, (user_id,)) as cursor:
             row = await cursor.fetchone()
             return row[0] if row else 0
+
+
+async def update_user_phone(user_id, phone):
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute("UPDATE users SET phone = ? WHERE user_id = ?", (phone, user_id))
+        await db.commit()
+
+
+async def is_phone_used(phone, exclude_user_id=None):
+    async with aiosqlite.connect(DB_PATH) as db:
+        if exclude_user_id:
+            async with db.execute(
+                "SELECT user_id FROM users WHERE phone = ? AND user_id != ?",
+                (phone, exclude_user_id)
+            ) as cursor:
+                row = await cursor.fetchone()
+                return row is not None
+        else:
+            async with db.execute(
+                "SELECT user_id FROM users WHERE phone = ?",
+                (phone,)
+            ) as cursor:
+                row = await cursor.fetchone()
+                return row is not None
+
+
+async def get_user_referals_today(user_id):
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+            SELECT COUNT(*) FROM users 
+            WHERE refered_by = ? 
+            AND date(created_at) = date('now')
+        """, (user_id,)) as cursor:
+            row = await cursor.fetchone()
+            return row[0] if row else 0
+
+
+async def get_user_orders_today(user_id):
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+            SELECT COUNT(*) FROM orders 
+            WHERE user_id = ? 
+            AND date(created_at) = date('now')
+        """, (user_id,)) as cursor:
+            row = await cursor.fetchone()
+            return row[0] if row else 0
+
+
+async def get_pending_orders_count(user_id):
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+            SELECT COUNT(*) FROM orders 
+            WHERE user_id = ? AND status = 'pending'
+        """, (user_id,)) as cursor:
+            row = await cursor.fetchone()
+            return row[0] if row else 0
+
+
+async def is_receipt_used(receipt_file_id):
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+            SELECT COUNT(*) FROM orders 
+            WHERE receipt_file_id = ?
+        """, (receipt_file_id,)) as cursor:
+            row = await cursor.fetchone()
+            return row[0] > 0 if row else False
+
+
+async def get_user_account_age_days(user_id):
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+            SELECT julianday('now') - julianday(created_at) 
+            FROM users WHERE user_id = ?
+        """, (user_id,)) as cursor:
+            row = await cursor.fetchone()
+            return int(row[0]) if row and row[0] else 0
