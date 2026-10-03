@@ -41,6 +41,13 @@ def phone_keyboard():
     )
 
 
+def get_user_phone(user):
+    try:
+        return user["phone"]
+    except (KeyError, IndexError):
+        return None
+
+
 @router.message(CommandStart())
 async def cmd_start(message: Message, bot: Bot, command: Command, state: FSMContext):
     await state.clear()
@@ -56,7 +63,8 @@ async def cmd_start(message: Message, bot: Bot, command: Command, state: FSMCont
             ref_id = int(args)
             if ref_id != user_id:
                 ref_user = await get_user(ref_id)
-                if ref_user and ref_user["phone"]:
+                ref_phone = get_user_phone(ref_user) if ref_user else None
+                if ref_phone:
                     today_referals = await get_user_referals_today(ref_id)
                     if today_referals < MAX_REFERALS_PER_DAY:
                         refered_by = ref_id
@@ -88,20 +96,17 @@ async def cmd_start(message: Message, bot: Bot, command: Command, state: FSMCont
         )
         return
 
-    try:
-    has_phone = bool(user["phone"])
-except (KeyError, IndexError):
-    has_phone = False
+    user_phone = get_user_phone(user)
 
-if not has_phone:
-    await state.set_state(RegState.waiting_phone)
-    await message.answer(
-        "📱 <b>Telefon raqamingizni yuboring</b>\n\n"
-        "Faqat <b>O'zbekiston</b> raqamlari (<code>+998</code>) qabul qilinadi.",
-        reply_markup=phone_keyboard(),
-        parse_mode="HTML"
-    )
-    return
+    if not user_phone:
+        await state.set_state(RegState.waiting_phone)
+        await message.answer(
+            "📱 <b>Telefon raqamingizni yuboring</b>\n\n"
+            "Faqat <b>O'zbekiston</b> raqamlari (<code>+998</code>) qabul qilinadi.",
+            reply_markup=phone_keyboard(),
+            parse_mode="HTML"
+        )
+        return
 
     lang = user["language"] if user else "uz"
 
@@ -338,7 +343,7 @@ async def back_to_main(callback: CallbackQuery):
         await callback.message.delete()
     except Exception:
         pass
-    await message.answer(
+    await callback.message.answer(
         t(lang, "main_menu"),
         reply_markup=main_menu(lang, is_admin=is_admin)
     )
