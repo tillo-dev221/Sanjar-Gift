@@ -56,7 +56,7 @@ class SubscriptionMiddleware(BaseMiddleware):
                 if member.status in ("left", "kicked"):
                     not_subscribed.append(ch)
             except Exception as e:
-                print(f"Obuna tekshirish xatosi ({ch['channel_username']}): {e}")
+                print(f"Obuna tekshirish xatosi ({chat_id}): {e}")
                 continue
 
         if not not_subscribed:
