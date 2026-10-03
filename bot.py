@@ -39,12 +39,12 @@ async def main():
     dp.message.middleware(subscription_middleware)
     dp.callback_query.middleware(subscription_middleware)
 
-    dp.include_router(start.router)
-    dp.include_router(gift.router)
-    dp.include_router(balance.router)
-    dp.include_router(referal.router)
-    dp.include_router(support.router)
-    dp.include_router(admin.router)
+dp.include_router(start.router)
+dp.include_router(gift.router)
+dp.include_router(balance.router)
+dp.include_router(referal.router)
+dp.include_router(support.router)
+dp.include_router(admin.router)
 
     logger.info("Bot ishga tushdi")
 
