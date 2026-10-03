@@ -10,8 +10,8 @@ class AntiSpamMiddleware(BaseMiddleware):
         self.user_requests = defaultdict(list)
         self.blocked_users = {}
         self.SPAM_WINDOW = 60
-        self.SPAM_LIMIT = 5
-        self.BLOCK_DURATION = 3600
+        self.SPAM_LIMIT = 20
+        self.BLOCK_DURATION = 300
 
     async def __call__(
         self,
@@ -27,6 +27,12 @@ class AntiSpamMiddleware(BaseMiddleware):
 
         if not user_id:
             return await handler(event, data)
+
+        if isinstance(event, Message):
+            if event.text and event.text.startswith("/start"):
+                return await handler(event, data)
+            if event.contact:
+                return await handler(event, data)
 
         now = time.time()
 
@@ -54,7 +60,7 @@ class AntiSpamMiddleware(BaseMiddleware):
             if isinstance(event, Message):
                 await event.answer(
                     f"🚫 <b>Juda ko'p so'rov!</b>\n\n"
-                    f"Siz 1 soatga bloklandingiz.\n"
+                    f"Siz {self.BLOCK_DURATION // 60} daqiqaga bloklandingiz.\n"
                     f"Sabab: spam",
                     parse_mode="HTML"
                 )
