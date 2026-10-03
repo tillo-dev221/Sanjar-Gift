@@ -439,3 +439,14 @@ async def get_user_account_age_days(user_id):
         """, (user_id,)) as cursor:
             row = await cursor.fetchone()
             return int(row[0]) if row and row[0] else 0
+
+
+async def get_user_referals_today(user_id):
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+            SELECT COUNT(*) FROM users 
+            WHERE refered_by = ? 
+            AND date(created_at) = date('now')
+        """, (user_id,)) as cursor:
+            row = await cursor.fetchone()
+            return row[0] if row else 0
