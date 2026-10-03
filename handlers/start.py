@@ -88,15 +88,20 @@ async def cmd_start(message: Message, bot: Bot, command: Command, state: FSMCont
         )
         return
 
-    if not user["phone"]:
-        await state.set_state(RegState.waiting_phone)
-        await message.answer(
-            "📱 <b>Telefon raqamingizni yuboring</b>\n\n"
-            "Faqat <b>O'zbekiston</b> raqamlari (<code>+998</code>) qabul qilinadi.",
-            reply_markup=phone_keyboard(),
-            parse_mode="HTML"
-        )
-        return
+    try:
+    has_phone = bool(user["phone"])
+except (KeyError, IndexError):
+    has_phone = False
+
+if not has_phone:
+    await state.set_state(RegState.waiting_phone)
+    await message.answer(
+        "📱 <b>Telefon raqamingizni yuboring</b>\n\n"
+        "Faqat <b>O'zbekiston</b> raqamlari (<code>+998</code>) qabul qilinadi.",
+        reply_markup=phone_keyboard(),
+        parse_mode="HTML"
+    )
+    return
 
     lang = user["language"] if user else "uz"
 
