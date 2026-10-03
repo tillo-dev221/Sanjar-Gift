@@ -800,22 +800,31 @@ async def process_add_channel(message: Message, state: FSMContext):
 
     text = message.text.strip()
 
-    if not text.startswith("@"):
+    if text.startswith("https://t.me/"):
+        text = text.replace("https://t.me/", "@")
+    elif text.startswith("t.me/"):
+        text = text.replace("t.me/", "@")
+    elif not text.startswith("@") and not text.startswith("-"):
         text = "@" + text
 
-    username = text.lstrip("@")
+    if text.startswith("-"):
+        username = text
+        channel_id = text
+    else:
+        username = text.lstrip("@")
+        channel_id = text
 
     if len(username) < 4:
         await message.answer("❌ Username juda qisqa. Qayta kiriting:")
         return
 
-    await add_channel(text, username, username)
-    await log_admin_action(message.from_user.id, "ADD_CHANNEL", text)
+    await add_channel(channel_id, username, username)
+    await log_admin_action(message.from_user.id, "ADD_CHANNEL", channel_id)
 
     await message.answer(
         f"✅ <b>Kanal qo'shildi!</b>\n\n"
-        f"🔗 Username: {text}\n"
-        f"🆔 ID: <code>{text}</code>\n\n"
+        f"🔗 Username: @{username}\n"
+        f"🆔 ID: <code>{channel_id}</code>\n\n"
         f"⚠️ Botni kanalga <b>admin</b> qilishni unutmang!",
         parse_mode="HTML"
     )
@@ -1140,7 +1149,8 @@ async def admin_remove_start(callback: CallbackQuery, state: FSMContext):
     text = "➖ <b>Admin o'chirish</b>\n\nQaysi adminni o'chirish?\n\n"
     for a in admins:
         if a["role"] != "owner":
-            text += f"🆔 <code>{a['user_id']}</code> — {a['full_name'] or 'Noma lum'}\n"
+            full_name = a["full_name"] if a["full_name"] else "Noma lum"
+            text += f"🆔 <code>{a['user_id']}</code> — {full_name}\n"
 
     text += "\n<i>ID ni yuboring</i>"
 
