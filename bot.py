@@ -5,7 +5,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from config import BOT_TOKEN
 from database import init_db
 from handlers import start, gift, balance, referal, support, admin
-from middlewares import SubscriptionMiddleware, StateResetMiddleware
+from middlewares import SubscriptionMiddleware, StateResetMiddleware, AntiSpamMiddleware
 from keyboards import get_bot_commands
 
 logging.basicConfig(
@@ -35,16 +35,20 @@ async def main():
     state_reset_middleware = StateResetMiddleware()
     dp.message.middleware(state_reset_middleware)
 
+    antispam_middleware = AntiSpamMiddleware()
+    dp.message.middleware(antispam_middleware)
+    dp.callback_query.middleware(antispam_middleware)
+
     subscription_middleware = SubscriptionMiddleware()
     dp.message.middleware(subscription_middleware)
     dp.callback_query.middleware(subscription_middleware)
 
-dp.include_router(start.router)
-dp.include_router(gift.router)
-dp.include_router(balance.router)
-dp.include_router(referal.router)
-dp.include_router(support.router)
-dp.include_router(admin.router)
+    dp.include_router(start.router)
+    dp.include_router(gift.router)
+    dp.include_router(balance.router)
+    dp.include_router(referal.router)
+    dp.include_router(support.router)
+    dp.include_router(admin.router)
 
     logger.info("Bot ishga tushdi")
 
