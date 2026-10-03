@@ -376,3 +376,66 @@ async def update_admin_info(user_id, username, full_name):
             WHERE user_id = ?
         """, (username, full_name, user_id))
         await db.commit()
+
+
+async def get_user_orders_count(user_id, hours=24):
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+            SELECT COUNT(*) FROM orders 
+            WHERE user_id = ? 
+            AND created_at > datetime('now', '-' || ? || ' hours')
+        """, (user_id, hours)) as cursor:
+            row = await cursor.fetchone()
+            return row[0] if row else 0
+
+
+async def get_user_orders_today(user_id):
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+            SELECT COUNT(*) FROM orders 
+            WHERE user_id = ? 
+            AND date(created_at) = date('now')
+        """, (user_id,)) as cursor:
+            row = await cursor.fetchone()
+            return row[0] if row else 0
+
+
+async def get_last_order_time(user_id):
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+            SELECT created_at FROM orders 
+            WHERE user_id = ? 
+            ORDER BY created_at DESC LIMIT 1
+        """, (user_id,)) as cursor:
+            row = await cursor.fetchone()
+            return row[0] if row else None
+
+
+async def is_receipt_used(receipt_file_id):
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+            SELECT COUNT(*) FROM orders 
+            WHERE receipt_file_id = ?
+        """, (receipt_file_id,)) as cursor:
+            row = await cursor.fetchone()
+            return row[0] > 0 if row else False
+
+
+async def get_pending_orders_count(user_id):
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+            SELECT COUNT(*) FROM orders 
+            WHERE user_id = ? AND status = 'pending'
+        """, (user_id,)) as cursor:
+            row = await cursor.fetchone()
+            return row[0] if row else 0
+
+
+async def get_user_account_age_days(user_id):
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("""
+            SELECT julianday('now') - julianday(created_at) 
+            FROM users WHERE user_id = ?
+        """, (user_id,)) as cursor:
+            row = await cursor.fetchone()
+            return int(row[0]) if row and row[0] else 0
