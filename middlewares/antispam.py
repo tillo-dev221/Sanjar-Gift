@@ -8,11 +8,9 @@ from collections import defaultdict
 class AntiSpamMiddleware(BaseMiddleware):
     def __init__(self):
         self.user_requests = defaultdict(list)
-        self.user_last_order = defaultdict(float)
         self.blocked_users = {}
         self.SPAM_WINDOW = 60
         self.SPAM_LIMIT = 5
-        self.ORDER_COOLDOWN = 5
         self.BLOCK_DURATION = 3600
 
     async def __call__(
